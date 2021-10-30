@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  nginx:
+    volumes:
+      - ./services/nginx/etc/default.dev.conf:/etc/nginx/templates/default.conf.template
+    links:
+      - node
+
+  php:
+    build:
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/php:/var/www
+    environment:
+      ENV: development
+
+  node:
+    image: node
+    ports:
+      - "3000:3000"
+    working_dir: /home/app
+    volumes:
+      - ./services/node:/home/app
+    environment:
+      CHOKIDAR_USEPOLLING: true
+    tty: true

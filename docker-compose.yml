@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./services/nginx/logs:/var/log/nginx
+      - ./services/php:/var/www
+    environment:
+      - NGINX_HOST=$NGINX_HOST
+    links:
+      - php
+
+  php:
+    build: ./services/php
+    links:
+      - mysql
+    environment:
+      MYSQL_HOST: $MYSQL_HOST
+      MYSQL_DATABASE: $MYSQL_DATABASE
+      MYSQL_USER: $MYSQL_USER
+      MYSQL_PASSWORD: $MYSQL_PASSWORD
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./services/mysql/etc:/etc/mysql
+      - ./services/mysql/logs:/var/log/mysql
+      - ./services/mysql/libs:/var/lib/mysql
+      - ./services/mysql/files:/var/lib/mysql-files
+      - ./services/mysql/initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: $MYSQL_DATABASE
+      MYSQL_USER: $MYSQL_USER
+      MYSQL_PASSWORD: $MYSQL_PASSWORD
+      MYSQL_RANDOM_ROOT_PASSWORD: true
