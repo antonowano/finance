@@ -3,27 +3,42 @@
 namespace App\Dto;
 
 use DateTime;
+use JetBrains\PhpStorm\ArrayShape;
 
 class Transaction
 {
     private ?int $id = null;
     private DateTime $created;
     private float $value;
-    private ?Category $category;
+    private ?int $categoryId;
 
+    #[ArrayShape([
+        'id' => 'int|null',
+        'created' => 'string',
+        'value' => 'float',
+        'category_id' => 'int|null',
+    ])]
     public function toArray(): array
     {
         return [
             'id' => $this->id,
             'created' => $this->created->format('Y-m-d\TH:i:s'),
             'value' => $this->value,
-            'category' => $this->category?->toArray(),
+            'category_id' => $this->categoryId,
         ];
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @param int|null $id
+     */
+    public function setId(?int $id): void
+    {
+        $this->id = $id;
     }
 
     public function getCreated(): DateTime
@@ -46,13 +61,13 @@ class Transaction
         $this->value = $value;
     }
 
-    public function getCategory(): ?Category
+    public function getCategoryId(): ?int
     {
-        return $this->category;
+        return $this->categoryId;
     }
 
-    public function setCategory(?Category $category): void
+    public function setCategoryId(?int $categoryId): void
     {
-        $this->category = $category;
+        $this->categoryId = $categoryId;
     }
 }

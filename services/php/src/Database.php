@@ -2,11 +2,13 @@
 
 namespace App;
 
+use App\Dto\AmountByDay;
 use App\Dto\Category;
 use App\Dto\Transaction;
+use App\Dto\TransactionPerDay;
+use DateTime;
 use PDO;
 use PDOException;
-use ReflectionProperty;
 
 class Database
 {
@@ -54,10 +56,17 @@ class Database
 
         $sth->bindValue(1, $transaction->getCreated()->format('c'));
         $sth->bindValue(2, $transaction->getValue());
-        $sth->bindValue(3, $transaction->getCategory()?->getId());
+        $sth->bindValue(3, $transaction->getCategoryId());
         $sth->execute();
+
+        if (!$transaction->getId()) {
+            $transaction->setId($this->pdo->lastInsertId());
+        }
     }
 
+    /**
+     * @return AmountByDay[]
+     */
     public function getAmountByDay(): array
     {
         $sth = $this->pdo->prepare('
@@ -67,19 +76,22 @@ class Database
             ORDER BY `date` DESC
         ');
         $sth->execute();
-        return $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $sth->fetchAll(PDO::FETCH_CLASS, AmountByDay::class);
     }
 
-    public function getTransactionsPerDay(\DateTime $day): array
+    /**
+     * @return TransactionPerDay[]
+     */
+    public function getTransactionsPerDay(DateTime $day): array
     {
         $sth = $this->pdo->prepare('
             SELECT f.`created`, f.`value`, c.`name` AS `category`
             FROM `finance` AS f 
                 LEFT JOIN `finance_categories` AS c ON c.`id` = f.`category_id`
             WHERE f.`created` LIKE :likeDate 
-            ORDER BY f.`created` ASC
+            ORDER BY f.`created`
         ');
         $sth->execute([':likeDate' => $day->format('Y-m-d%')]);
-        return $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $sth->fetchAll(PDO::FETCH_CLASS, TransactionPerDay::class);
     }
 }

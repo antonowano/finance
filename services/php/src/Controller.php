@@ -2,8 +2,10 @@
 
 namespace App;
 
+use App\Dto\AmountByDay;
 use App\Dto\Category;
 use App\Dto\Transaction;
+use App\Dto\TransactionPerDay;
 use App\Exception\ControllerException;
 use App\Exception\ModelException;
 use App\Model\AddTransactionModel;
@@ -18,7 +20,11 @@ class Controller
     public function getAmountByDay(): array
     {
         $model = new StandardModel();
-        return $model->getDb()->getAmountByDay();
+
+        return array_map(
+            fn(AmountByDay $amount) => $amount->toArray(),
+            $model->getDb()->getAmountByDay()
+        );
     }
 
     /**
@@ -34,7 +40,10 @@ class Controller
             throw new ControllerException('Не указан день или указан в неверном формате. Ожидаемый формат: 1993-01-01');
         }
 
-        return $model->getDb()->getTransactionsPerDay($day);
+        return array_map(
+            fn(TransactionPerDay $transaction) => $transaction->toArray(),
+            $model->getDb()->getTransactionsPerDay($day)
+        );
     }
 
     /**
@@ -47,7 +56,7 @@ class Controller
         $transaction = new Transaction();
         $transaction->setValue($model->getValue());
         $transaction->setCreated($model->getCreated());
-        $transaction->setCategory($model->getCategory());
+        $transaction->setCategoryId($model->getCategory()?->getId());
 
         $model->getDb()->pushTransaction($transaction);
         return true;
