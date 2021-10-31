@@ -19,7 +19,10 @@ try {
             'amount_by_day' => $controller->getAmountByDay(),
             'transactions_per_day' => $controller->getTransactionsPerDay(),
             'add_transaction' => $controller->addTransaction(),
+            'delete_transaction' => $controller->deleteTransaction(),
             'all_categories' => $controller->getAllCategories(),
+            'add_category' => $controller->addCategory(),
+            'delete_category' => $controller->deleteCategory(),
             default => throw new AppException('Метод не указан')
         },
     ];

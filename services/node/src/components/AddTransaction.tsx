@@ -5,11 +5,16 @@ import FinanceService from '../services/FinanceService';
 const AddTransaction = () => {
   const [ categories, setCategories ] = useState<Category[]>([]);
   const [ success, setSuccess ] = useState<boolean>(false);
-  const [ body, setBody ] = useState<Transaction>({
-    value: '',
-    created: currentTime(),
-    category: '',
-  });
+  const [ body, setBody ] = useState<Transaction>(getEmptyTransaction());
+
+  function getEmptyTransaction(): Transaction {
+    return {
+      id: null,
+      value: '',
+      created: currentTime(),
+      categoryId: null,
+    };
+  }
 
   useEffect(() => {
     FinanceService.getAllCategories().then((obj) => setCategories(obj.data));
@@ -20,7 +25,7 @@ const AddTransaction = () => {
 
     FinanceService.addTransaction(body)
       .then(() => setSuccess(true))
-      .then(() => setBody({ ...body, value: '', created: currentTime(), category: '' }))
+      .then(() => setBody({ ...body, ...getEmptyTransaction() }))
     ;
   }
 
@@ -49,8 +54,8 @@ const AddTransaction = () => {
     </div>
     <div className="mb-3">
       <label htmlFor="category_id" className="form-label">Категория</label>
-      <select className="form-select" id="category_id" name="category_id" value={body.category}
-              onChange={(e) => setBody({ ...body, category: e.target.value })}>
+      <select className="form-select" id="category_id" name="category_id" value={body.categoryId || ''}
+              onChange={(e) => setBody({ ...body, categoryId: e.target.value })}>
         <option value="">- Не выбрана -</option>
         {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
       </select>

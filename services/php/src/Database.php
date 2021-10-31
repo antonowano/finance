@@ -5,7 +5,6 @@ namespace App;
 use App\Dto\AmountByDay;
 use App\Dto\Category;
 use App\Dto\Transaction;
-use App\Dto\TransactionPerDay;
 use DateTime;
 use PDO;
 use PDOException;
@@ -34,34 +33,49 @@ class Database
     {
         $sth = $this->pdo->prepare('SELECT `id`, `name` FROM `finance_categories`');
         $sth->execute();
-
         return $sth->fetchAll(PDO::FETCH_CLASS, Category::class);
+    }
+
+    public function countCategoriesWithName(string $name): int
+    {
+        $sth = $this->pdo->prepare('SELECT COUNT(`id`) FROM `finance_categories` WHERE `name` LIKE :name');
+        $sth->execute([':name' => $name]);
+        return $sth->fetchColumn();
+    }
+
+    public function deleteCategory(int $id): bool
+    {
+        $sth = $this->pdo->prepare('DELETE FROM `finance_categories` WHERE id = :id');
+        return $sth->execute([':id' => $id]);
+    }
+
+    public function addCategory(Category $category): bool
+    {
+        $sth = $this->pdo->prepare('INSERT INTO `finance_categories` (`name`) VALUE(?)');
+        $sth->bindValue(1, $category->getName());
+        $result = $sth->execute();
+        $category->setId($this->pdo->lastInsertId());
+        return $result;
     }
 
     /**
      * @throws PDOException
      */
-    public function pushTransaction(Transaction $transaction)
+    public function addTransaction(Transaction $transaction): bool
     {
-        if ($transaction->getId()) {
-            $sth = $this->pdo->prepare('
-                UPDATE `finance` 
-                SET `created` = ?, `value` = ?, `category_id` = ? 
-                WHERE `id` = ?
-            ');
-            $sth->bindValue(4, $transaction->getId());
-        } else {
-            $sth = $this->pdo->prepare('INSERT `finance` (`created`, `value`, `category_id`) VALUE(?, ?, ?)');
-        }
-
-        $sth->bindValue(1, $transaction->getCreated()->format('c'));
+        $sth = $this->pdo->prepare('INSERT INTO `finance` (`created`, `value`, `category_id`) VALUE(?, ?, ?)');
+        $sth->bindValue(1, $transaction->getCreated());
         $sth->bindValue(2, $transaction->getValue());
         $sth->bindValue(3, $transaction->getCategoryId());
-        $sth->execute();
+        $result = $sth->execute();
+        $transaction->setId($this->pdo->lastInsertId());
+        return $result;
+    }
 
-        if (!$transaction->getId()) {
-            $transaction->setId($this->pdo->lastInsertId());
-        }
+    public function deleteTransaction(int $id): bool
+    {
+        $sth = $this->pdo->prepare('DELETE FROM `finance` WHERE id = :id');
+        return $sth->execute([':id' => $id]);
     }
 
     /**
@@ -80,18 +94,18 @@ class Database
     }
 
     /**
-     * @return TransactionPerDay[]
+     * @return Transaction[]
      */
     public function getTransactionsPerDay(DateTime $day): array
     {
         $sth = $this->pdo->prepare('
-            SELECT f.`created`, f.`value`, c.`name` AS `category`
+            SELECT f.id, f.`created`, f.`value`, c.`id` AS `categoryId`, c.`name` AS `categoryName`
             FROM `finance` AS f 
                 LEFT JOIN `finance_categories` AS c ON c.`id` = f.`category_id`
             WHERE f.`created` LIKE :likeDate 
             ORDER BY f.`created`
         ');
         $sth->execute([':likeDate' => $day->format('Y-m-d%')]);
-        return $sth->fetchAll(PDO::FETCH_CLASS, TransactionPerDay::class);
+        return $sth->fetchAll(PDO::FETCH_CLASS, Transaction::class);
     }
 }

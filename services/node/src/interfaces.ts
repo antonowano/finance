@@ -9,9 +9,11 @@ export interface AmountPerDay {
 }
 
 export interface Transaction {
+  id: number | null;
   created: string;
   value: string;
-  category: string;
+  categoryId: string | null;
+  categoryName?: string | null;
 }
 
 export interface Category {

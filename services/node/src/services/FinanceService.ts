@@ -16,7 +16,7 @@ export default class FinanceService {
       .then((response) => response.json());
   }
 
-  static async addTransaction(data: Transaction): Promise<Response<true>> {
+  static async addTransaction(data: Transaction): Promise<Response<boolean>> {
     const options = {
       method: 'POST',
       headers: {
@@ -25,10 +25,22 @@ export default class FinanceService {
       body: new URLSearchParams({
         value: data.value,
         created: data.created,
-        category_id: data.category,
+        category_id: data.categoryId || '',
       }),
     };
     return await fetch('/api.php?method=add_transaction', options)
+      .then((response) => response.json());
+  }
+
+  static async removeTransaction(id: number): Promise<Response<boolean>> {
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
+      body: new URLSearchParams({ id: id.toString() }),
+    };
+    return await fetch('/api.php?method=delete_transaction', options)
       .then((response) => response.json());
   }
 }

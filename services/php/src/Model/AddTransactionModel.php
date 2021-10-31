@@ -4,6 +4,7 @@ namespace App\Model;
 
 use App\Dto\Category;
 use App\Exception\ModelException;
+use DateTime;
 
 class AddTransactionModel extends StandardModel
 {
@@ -22,19 +23,19 @@ class AddTransactionModel extends StandardModel
     /**
      * @throws ModelException
      */
-    public function getCreated(): \DateTime
+    public function getCreated(): string
     {
         if (empty($_POST['created'])) {
             throw new ModelException('Дата не выбрана');
         }
 
-        $datetime = \DateTime::createFromFormat('Y-m-d\TH:i', $_POST['created']);
+        $datetime = DateTime::createFromFormat('Y-m-d\TH:i', $_POST['created']);
 
         if (!$datetime) {
             throw new ModelException('Невозможно преобразовать дату для добавления в базу данных');
         }
 
-        return $datetime;
+        return $datetime->format('c');
     }
 
     /**

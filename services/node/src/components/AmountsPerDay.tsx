@@ -13,17 +13,15 @@ const AmountsPerDay = () => {
   return <table className="table">
     <thead>
     <tr>
-      <th className="col">#</th>
       <th className="col">День</th>
-      <th className="col">Сумма</th>
+      <th className="col text-end">Сумма</th>
     </tr>
     </thead>
     <tbody>
-      {amounts.map((amount, index) => <tr key={amount.date}>
-        <th>{index + 1}</th>
+      {amounts.length ? amounts.map((amount) => <tr key={amount.date}>
         <td><Link to={`/transactions/${amount.date}`}>{amount.date}</Link></td>
-        <td>{amount.value}</td>
-      </tr>)}
+        <td className="text-end">{amount.value} руб.</td>
+      </tr>) : <tr><td className="text-center" colSpan={2}>Нет информации по расходам и доходам.</td></tr>}
     </tbody>
   </table>;
 };

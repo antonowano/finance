@@ -5,18 +5,15 @@ namespace App;
 use App\Dto\AmountByDay;
 use App\Dto\Category;
 use App\Dto\Transaction;
-use App\Dto\TransactionPerDay;
 use App\Exception\ControllerException;
 use App\Exception\ModelException;
+use App\Model\AddCategoryModel;
 use App\Model\AddTransactionModel;
 use App\Model\StandardModel;
 use DateTime;
 
 class Controller
 {
-    /**
-     * @throws ModelException
-     */
     public function getAmountByDay(): array
     {
         $model = new StandardModel();
@@ -29,7 +26,6 @@ class Controller
 
     /**
      * @throws ControllerException
-     * @throws ModelException
      */
     public function getTransactionsPerDay(): array
     {
@@ -41,7 +37,7 @@ class Controller
         }
 
         return array_map(
-            fn(TransactionPerDay $transaction) => $transaction->toArray(),
+            fn(Transaction $transaction) => $transaction->toArray(),
             $model->getDb()->getTransactionsPerDay($day)
         );
     }
@@ -58,13 +54,26 @@ class Controller
         $transaction->setCreated($model->getCreated());
         $transaction->setCategoryId($model->getCategory()?->getId());
 
-        $model->getDb()->pushTransaction($transaction);
+        $model->getDb()->addTransaction($transaction);
         return true;
     }
 
     /**
-     * @throws ModelException
+     * @throws ControllerException
      */
+    public function deleteTransaction(): bool
+    {
+        $model = new StandardModel();
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            throw new ControllerException('Идентификатор транзакции не передан');
+        }
+
+        $model->getDb()->deleteTransaction($_POST['id']);
+        return true;
+    }
+
     public function getAllCategories(): array
     {
         $model = new StandardModel();
@@ -72,5 +81,33 @@ class Controller
             fn(Category $category) => $category->toArray(),
             $model->getDb()->getAllCategories()
         );
+    }
+
+    /**
+     * @throws ModelException
+     */
+    public function addCategory(): bool
+    {
+        $model = new AddCategoryModel();
+
+        $category = new Category();
+        $category->setName($model->getName());
+
+        return $model->getDb()->addCategory($category);
+    }
+
+    /**
+     * @throws ControllerException
+     */
+    public function deleteCategory(): bool
+    {
+        $model = new StandardModel();
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            throw new ControllerException('Идентификатор категории не передан');
+        }
+
+        return $model->getDb()->deleteCategory($_POST['id']);
     }
 }
